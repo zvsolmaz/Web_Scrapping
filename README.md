@@ -2,16 +2,17 @@
 # Web Scraping Tabanlı Kentsel Haber İzleme ve Harita Üzerinde Görselleştirme Sistemi
 
 Bu proje, Kocaeli iline ait yerel haber sitelerinden otomatik olarak veri toplayan, toplanan haberleri doğal dil işleme teknikleriyle sınıflandıran, coğrafi konum bilgisini çıkarıp Google Maps üzerinde interaktif olarak görselleştiren uçtan uca (end-to-end) bir sistemdir.
+
 ## 📊 Ekran Görüntüleri
 
 ### Genel Bakış ve Filtreleme Paneli
-![Kocaeli Haber Haritası Genel Görünüm](images/dashboard.png)
+![Kocaeli Haber Haritası Genel Görünüm](images/Ekran%20görüntüsü%202026-07-08%20205723.png)
 
 ### Sol Panel (Son Haberler Listesi)
-![Son Haberler Listesi](images/sidebar.png)
+![Son Haberler Listesi](images/Ekran%20görüntüsü%202026-07-08%20205733.png)
 
 ### Harita İşaretçi Detayı (Mükerrer Haber Birleştirme)
-![Marker Detay Penceresi](images/popup.png)
+![Marker Detay Penceresi](images/Ekran%20görüntüsü%202026-07-08%20205741.png)
 
 ## 🚀 Özellikler
 
@@ -38,10 +39,12 @@ Sistem 4 ana katmandan oluşmaktadır:
 * MongoDB
 * Google Maps & Geocoding API Anahtarı (Key)
 
+### Kurulum Adımları
+
 1. Projeyi klonlayın:
-   ```bash
-   git clone [https://github.com/kullaniciadi/kentsel-haber-izleme.git](https://github.com/kullaniciadi/kentsel-haber-izleme.git)
-   cd kentsel-haber-izleme
+``bash
+git clone [https://github.com/kullaniciadi/kentsel-haber-izleme.git](https://github.com/kullaniciadi/kentsel-haber-izleme.git)
+cd kentsel-haber-izleme
 Gerekli kütüphaneleri yükleyin:Bashpip install -r requirements.txt
 Kök dizinde bir .env dosyası oluşturun ve API anahtarlarınızı tanımlayın:  
 Kod snippet'iMONGO_URI=mongodb://localhost:27017/
