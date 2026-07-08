@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kocaeli Haber Haritası</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2230;
+    --border: rgba(255,255,255,0.08);
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --accent: #f78166;
+    --trafik: #e63946;
+    --yangin: #f4a261;
+    --elektrik: #f7d060;
+    --hirsizlik: #9b5de5;
+    --kultur: #4cc9f0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    z-index: 100;
+    flex-shrink: 0;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), #ff6b35);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .logo h1 { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; }
+  .logo span { color: var(--accent); }
+  .header-stats { display: flex; gap: 20px; align-items: center; }
+  .stat-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .stat-pill strong { color: var(--text); font-size: 13px; }
+  .scrape-btn {
+    background: var(--accent);
+    color: #fff; border: none;
+    padding: 7px 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; gap: 6px;
+    transition: opacity .2s, transform .1s;
+  }
+  .scrape-btn:hover { opacity: .85; }
+  .scrape-btn:active { transform: scale(.97); }
+  .scrape-btn:disabled { opacity: .5; cursor: default; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar {
+    width: 280px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden; flex-shrink: 0;
+  }
+  .sidebar-scroll {
+    flex: 1; overflow-y: auto; padding: 16px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .filter-section { margin-bottom: 20px; }
+  .section-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .date-row { display: flex; gap: 8px; flex-direction: column; }
+  .date-input-wrap label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .date-input-wrap input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px; border-radius: 8px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border-color .2s;
+  }
+  .date-input-wrap input:focus { border-color: var(--accent); }
+  .tur-list { display: flex; flex-direction: column; gap: 4px; }
+  .tur-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    cursor: pointer; transition: background .15s; user-select: none;
+  }
+  .tur-item:hover { background: var(--surface2); }
+  .tur-item input[type=checkbox] { display: none; }
+  .tur-check {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all .15s; font-size: 10px;
+  }
+  .tur-item input:checked ~ .tur-check { border-color: transparent; }
+  .tur-icon { font-size: 16px; width: 24px; text-align: center; flex-shrink: 0; }
+  .tur-name { font-size: 13px; color: var(--text); flex: 1; }
+  .tur-count {
+    font-size: 11px; color: var(--muted);
+    background: var(--surface2); border-radius: 10px; padding: 1px 7px;
+  }
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px; border-radius: 8px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif;
+    outline: none; cursor: pointer; transition: border-color .2s;
+  }
+  select:focus { border-color: var(--accent); }
+  .filter-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #ff6b35);
+    color: #fff; border: none;
+    padding: 10px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: opacity .2s, transform .1s; margin-top: 4px;
+  }
+  .filter-btn:hover { opacity: .9; }
+  .filter-btn:active { transform: scale(.98); }
+  .reset-btn {
+    width: 100%; background: transparent;
+    color: var(--muted); border: 1px solid var(--border);
+    padding: 8px; border-radius: 10px;
+    font-size: 13px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all .2s; margin-top: 6px;
+  }
+  .reset-btn:hover { border-color: var(--muted); color: var(--text); }
+  .haber-list { display: flex; flex-direction: column; gap: 6px; }
+  .haber-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px; border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: pointer; transition: border-color .15s, transform .1s;
+  }
+  .haber-item:hover { border-color: rgba(255,255,255,0.2); transform: translateX(2px); }
+  .haber-item-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .haber-item-info { flex: 1; min-width: 0; }
+  .haber-item-title {
+    font-size: 12px; font-weight: 500; color: var(--text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .haber-item-meta {
+    font-size: 11px; color: var(--muted); margin-top: 3px;
+    display: flex; gap: 6px; align-items: center;
+  }
+  .haber-item-meta .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); }
+  #map { flex: 1; position: relative; }
+  .info-win {
+    font-family: 'DM Sans', sans-serif;
+    background: #1c2230; border-radius: 12px;
+    overflow: hidden; min-width: 240px; max-width: 280px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  }
+  .info-win-header { padding: 10px 14px 8px; display: flex; align-items: center; gap: 8px; }
+  .info-win-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; color: #fff;
+  }
+  .info-win-body { padding: 0 14px 14px; }
+  .info-win-title { font-size: 13px; font-weight: 600; color: #e6edf3; line-height: 1.4; margin-bottom: 8px; }
+  .info-win-meta { font-size: 11px; color: #7d8590; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+  .info-win-sources { font-size: 11px; color: #7d8590; margin-bottom: 10px; }
+  .info-win-btn {
+    display: block;
+    background: linear-gradient(135deg, #f78166, #ff6b35);
+    color: #fff; text-decoration: none;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; text-align: center;
+    transition: opacity .2s;
+  }
+  .info-win-btn:hover { opacity: .85; }
+  #toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); padding: 10px 20px; border-radius: 10px;
+    font-size: 13px; z-index: 9999; transition: transform .3s ease; white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  .loading-overlay {
+    position: absolute; inset: 0;
+    background: rgba(13,17,23,.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 50; backdrop-filter: blur(4px);
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .haber-sayac {
+    position: absolute; top: 12px; right: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 6px 14px;
+    font-size: 12px; color: var(--muted);
+    z-index: 10; pointer-events: none;
+  }
+  .haber-sayac strong { color: var(--text); font-size: 14px; }
+  .color-trafik { background: var(--trafik); }
+  .color-yangin { background: var(--yangin); }
+  .color-elektrik { background: var(--elektrik); }
+  .color-hirsizlik { background: var(--hirsizlik); }
+  .color-kultur { background: var(--kultur); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">🗺️</div>
+    <h1>KOCAELİ <span>HABER</span> HARİTASI</h1>
+  </div>
+  <div class="header-stats">
+    <div class="stat-pill">Toplam <strong id="h-toplam">—</strong> haber</div>
+    <div class="stat-pill">Haritada <strong id="h-haritada">—</strong></div>
+    <button class="scrape-btn" id="scrapeBtn" onclick="scrapingBaslat()">🔄 Güncelle</button>
+  </div>
+</header>
+
+<div class="main">
+  <aside class="sidebar">
+    <div class="sidebar-scroll">
+      <div class="filter-section">
+        <div class="section-label">Tarih Aralığı</div>
+        <div class="date-row">
+          <div class="date-input-wrap">
+            <label>Başlangıç</label>
+            <input type="date" id="baslangic">
+          </div>
+          <div class="date-input-wrap">
+            <label>Bitiş</label>
+            <input type="date" id="bitis">
+          </div>
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="section-label">Olay Türü</div>
+        <div class="tur-list" id="turList"></div>
+      </div>
+      <div class="filter-section">
+        <div class="section-label">İlçe</div>
+        <select id="ilceSelect">
+          <option value="">Tüm İlçeler</option>
+        </select>
+      </div>
+      <button class="filter-btn" onclick="filtreUygula()">Filtrele</button>
+      <button class="reset-btn" onclick="filtreleriSifirla()">↺ Sıfırla</button>
+      <div class="filter-section" style="margin-top:20px">
+        <div class="section-label">Son Haberler</div>
+        <div class="haber-list" id="haberList"></div>
+      </div>
+    </div>
+  </aside>
+
+  <div id="map">
+    <div class="haber-sayac">Haritada <strong id="harita-sayac">0</strong> haber</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = "";
+const TUR_KONFIG = {
+  "Trafik Kazası":        { renk: "#e63946", simge: "🚗", css: "color-trafik" },
+  "Yangın":               { renk: "#f4a261", simge: "🔥", css: "color-yangin" },
+  "Elektrik Kesintisi":   { renk: "#f7d060", simge: "⚡", css: "color-elektrik" },
+  "Hırsızlık":            { renk: "#9b5de5", simge: "🔒", css: "color-hirsizlik" },
+  "Kültürel Etkinlikler": { renk: "#4cc9f0", simge: "🎭", css: "color-kultur" },
+};
+
+let harita, infoWindow;
+let tumHaberler = [];
+let markerlar = [];
+let aktifTurler = new Set(Object.keys(TUR_KONFIG));
+
+async function haritaBaslat() {
+  const { Map } = await google.maps.importLibrary("maps");
+
+  harita = new Map(document.getElementById("map"), {
+    center: { lat: 40.7654, lng: 29.9408 },
+    zoom: 11,
+    minZoom: 9,
+    maxZoom: 17,
+    restriction: {
+      latLngBounds: { north: 41.10, south: 40.30, west: 29.00, east: 30.60 },
+      strictBounds: true
+    },
+    styles: [
+      { elementType: "geometry", stylers: [{ color: "#0d1117" }] },
+      { elementType: "labels.text.stroke", stylers: [{ color: "#0d1117" }] },
+      { elementType: "labels.text.fill", stylers: [{ color: "#7d8590" }] },
+      { featureType: "road", elementType: "geometry", stylers: [{ color: "#1c2230" }] },
+      { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#161b22" }] },
+      { featureType: "water", elementType: "geometry", stylers: [{ color: "#0a1628" }] },
+      { featureType: "poi", stylers: [{ visibility: "off" }] },
+      { featureType: "transit", stylers: [{ visibility: "off" }] },
+      { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#2d3748" }] },
+    ]
+  });
+
+  infoWindow = new google.maps.InfoWindow({ maxWidth: 300 });
+  turListesiOlustur();
+  await ilceleriYukle();
+  varsayilanTarihler();
+  await haberleriYukle();
+  await istatistikYukle();
+}
+
+function turListesiOlustur() {
+  const el = document.getElementById("turList");
+  el.innerHTML = Object.entries(TUR_KONFIG).map(([tur, k]) => `
+    <label class="tur-item">
+      <input type="checkbox" checked onchange="turDegistir('${tur}', this.checked)">
+      <div class="tur-check ${k.css}" style="color:#fff">✓</div>
+      <span class="tur-icon">${k.simge}</span>
+      <span class="tur-name">${tur}</span>
+      <span class="tur-count" id="count-${tur.replace(/\s/g,'_')}">0</span>
+    </label>
+  `).join("");
+}
+
+function turDegistir(tur, secili) {
+  if (secili) aktifTurler.add(tur);
+  else aktifTurler.delete(tur);
+  markerlarGuncelle();
+}
+
+async function ilceleriYukle() {
+  try {
+    const r = await fetch(`${API}/api/ilceler`);
+    const d = await r.json();
+    const sel = document.getElementById("ilceSelect");
+    d.ilceler.forEach(i => {
+      const o = document.createElement("option");
+      o.value = i; o.textContent = i;
+      sel.appendChild(o);
+    });
+  } catch {}
+}
+
+function varsayilanTarihler() {
+  const bugun = new Date();
+  const ucGunOnce = new Date();
+  ucGunOnce.setDate(bugun.getDate() - 3);
+  document.getElementById("bitis").value = bugun.toISOString().split("T")[0];
+  document.getElementById("baslangic").value = ucGunOnce.toISOString().split("T")[0];
+}
+
+async function haberleriYukle() {
+  showLoading(true);
+  try {
+    const params = new URLSearchParams();
+    const b = document.getElementById("baslangic").value;
+    const e = document.getElementById("bitis").value;
+    const i = document.getElementById("ilceSelect").value;
+    if (b) params.set("baslangic", b);
+    if (e) params.set("bitis", e);
+    if (i) params.set("ilce", i);
+
+    const r = await fetch(`${API}/api/haberler?${params}`);
+    const d = await r.json();
+    tumHaberler = d.haberler || [];
+    markerlarOlustur();
+    haberListesiniGuncelle();
+  } catch (err) {
+    toast("❌ Haberler yüklenemedi");
+  }
+  showLoading(false);
+}
+
+function markerlarOlustur() {
+  markerlarTemizle();
+
+  tumHaberler.forEach(h => {
+    if (!aktifTurler.has(h.haber_turu)) return;
+    if (!h.konum || !h.konum.enlem) return;
+
+    const k = TUR_KONFIG[h.haber_turu];
+
+    const offset = 0.002;
+const lat = h.konum.enlem + (Math.random() - 0.5) * offset;
+const lng = h.konum.boylam + (Math.random() - 0.5) * offset;
+
+const marker = new google.maps.Marker({
+    map: harita,
+    position: { lat: lat, lng: lng },
+      title: h.title,
+      icon: {
+        path: "M 0,-20 C -10,-20 -18,-12 -18,0 C -18,14 0,28 0,28 C 0,28 18,14 18,0 C 18,-12 10,-20 0,-20 Z",
+        fillColor: k.renk,
+        fillOpacity: 1,
+        strokeColor: "rgba(255,255,255,0.5)",
+        strokeWeight: 1.5,
+        scale: 1,
+        anchor: new google.maps.Point(0, 28),
+        labelOrigin: new google.maps.Point(0, 0)
+      },
+      label: {
+        text: k.simge,
+        fontSize: "14px",
+        className: "marker-label"
+      }
+    });
+
+    marker.addListener("click", () => bilgiPenceresiAc(marker, h));
+    markerlar.push(marker);
+  });
+
+  const sayacEl = document.getElementById("harita-sayac");
+  if (sayacEl) sayacEl.textContent = markerlar.length;
+  const haritadaEl = document.getElementById("h-haritada");
+  if (haritadaEl) haritadaEl.textContent = markerlar.length;
+  turSayaclariniGuncelle();
+}
+
+function markerlarGuncelle() {
+  markerlar.forEach(m => m.setMap(null));
+  markerlar = [];
+  markerlarOlustur();
+}
+
+function markerlarTemizle() {
+  markerlar.forEach(m => m.setMap(null));
+  markerlar = [];
+}
+
+function bilgiPenceresiAc(marker, h) {
+  const k = TUR_KONFIG[h.haber_turu];
+  const tarih = h.published_at
+    ? new Date(h.published_at).toLocaleDateString("tr-TR", {day:"2-digit",month:"long",year:"numeric"})
+    : "Tarih yok";
+  const kaynaklar = h.kaynaklar || [];
+  const ilkLink = kaynaklar[0]?.link || "#";
+  const kaynakAdlari = kaynaklar.map(k => k.site_adi).join(", ");
+
+  infoWindow.setContent(`
+    <div class="info-win">
+      <div class="info-win-header">
+        <span class="info-win-badge" style="background:${k.renk}20;color:${k.renk};border:1px solid ${k.renk}40">
+          ${k.simge} ${h.haber_turu}
+        </span>
+      </div>
+      <div class="info-win-body">
+        <div class="info-win-title">${h.title}</div>
+        <div class="info-win-meta">📅 ${tarih}</div>
+        <div class="info-win-meta">📍 ${h.konum?.metin || ""}</div>
+        <div class="info-win-sources">🔗 ${kaynakAdlari}</div>
+        <a href="${ilkLink}" target="_blank" class="info-win-btn">Habere Git →</a>
+      </div>
+    </div>
+  `);
+  infoWindow.open(harita, marker);
+}
+
+function haberListesiniGuncelle() {
+  const el = document.getElementById("haberList");
+  const gosterilecek = tumHaberler.filter(h => aktifTurler.has(h.haber_turu)).slice(0, 8);
+
+  if (gosterilecek.length === 0) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">Haber bulunamadı</div>`;
+    return;
+  }
+
+  el.innerHTML = gosterilecek.map(h => {
+    const k = TUR_KONFIG[h.haber_turu];
+    const tarih = h.published_at
+      ? new Date(h.published_at).toLocaleDateString("tr-TR", {day:"2-digit",month:"short"})
+      : "";
+    return `
+      <div class="haber-item" onclick="habereGit(${h.konum?.enlem},${h.konum?.boylam})">
+        <div class="haber-item-icon">${k.simge}</div>
+        <div class="haber-item-info">
+          <div class="haber-item-title">${h.title}</div>
+          <div class="haber-item-meta">
+            <span>${h.konum?.ilce || "?"}</span>
+            <div class="dot"></div>
+            <span>${tarih}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function habereGit(lat, lng) {
+  if (!lat || !lng) return;
+  harita.panTo({ lat, lng });
+  harita.setZoom(14);
+}
+
+function turSayaclariniGuncelle() {
+  Object.keys(TUR_KONFIG).forEach(tur => {
+    const sayi = tumHaberler.filter(h => h.haber_turu === tur).length;
+    const el = document.getElementById(`count-${tur.replace(/\s/g,'_')}`);
+    if (el) el.textContent = sayi;
+  });
+}
+
+function filtreUygula() { haberleriYukle(); }
+
+function filtreleriSifirla() {
+  aktifTurler = new Set(Object.keys(TUR_KONFIG));
+  document.getElementById("ilceSelect").value = "";
+  document.querySelectorAll(".tur-item input").forEach(cb => cb.checked = true);
+  varsayilanTarihler();
+  haberleriYukle();
+}
+
+async function istatistikYukle() {
+  try {
+    const r = await fetch(`${API}/api/istatistik`);
+    const d = await r.json();
+    document.getElementById("h-toplam").textContent = d.toplam;
+  } catch {}
+}
+
+async function scrapingBaslat() {
+  const btn = document.getElementById("scrapeBtn");
+  btn.disabled = true;
+  btn.textContent = "⏳ Güncelleniyor...";
+  toast("🔄 Scraping başlatıldı...");
+  try {
+    await fetch(`${API}/api/scrape`, { method: "POST" });
+    // Scraping bitene kadar her 5 saniyede kontrol et
+    const kontrol = setInterval(async () => {
+      try {
+        const r = await fetch(`${API}/api/scrape/durum`);
+        const d = await r.json();
+        if (!d.calisıyor) {
+          clearInterval(kontrol);
+          await haberleriYukle();
+          await istatistikYukle();
+          btn.disabled = false;
+          btn.textContent = "🔄 Güncelle";
+          toast("✅ Haberler güncellendi!");
+        }
+      } catch {
+        clearInterval(kontrol);
+        btn.disabled = false;
+        btn.textContent = "🔄 Güncelle";
+      }
+    }, 5000);
+  } catch {
+    btn.disabled = false;
+    btn.textContent = "🔄 Güncelle";
+    toast("❌ Scraping başlatılamadı");
+  }
+}
+
+function showLoading(show) {
+  let overlay = document.getElementById("loading");
+  if (show) {
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "loading";
+      overlay.className = "loading-overlay";
+      overlay.innerHTML = '<div class="spinner"></div>';
+      document.getElementById("map").appendChild(overlay);
+    }
+  } else {
+    if (overlay) overlay.remove();
+  }
+}
+
+let toastTimer;
+function toast(msg, sure = 3000) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), sure);
+}
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCZ4xLk1WMYsLYHNqPgVrxtWyKnegwLShI&loading=async&callback=haritaBaslat" async defer></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Web scraping
+requests==2.32.3
+beautifulsoup4==4.12.3
+urllib3==2.2.3
+
+# Web framework (backend API)
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# Veritabanı
+pymongo==4.10.1
+
+# Ortam değişkenleri
+python-dotenv==1.0.1
+
+# NLP / Embedding (duplicate tespiti)
+sentence-transformers==3.3.1
+scikit-learn==1.6.0
+numpy==2.2.1
+
+# Genel yardımcı
+lxml==5.3.0
